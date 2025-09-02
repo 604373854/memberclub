@@ -22,7 +22,8 @@ import java.io.IOException;
 import static com.memberclub.infrastructure.mq.MQContants.*;
 
 /**
- * Rabbitmq Topic Queue 注册
+ * 应用的 RabbitMQ 消费者配置类，将业务队列绑定到本类方法，
+ * 每个方法再调用 {@link AbstractRabbitmqConsumerConfiguration} 提供的辅助方法完成消费与重试。
  *
  * @see com.memberclub.infrastructure.mq.RabbitRegisterConfiguration
  * author: 掘金五阳
@@ -35,6 +36,9 @@ public class RabbitmqConsumerConfiguration extends AbstractRabbitmqConsumerConfi
     @Autowired
     private PurchaseBizService purchaseBizService;
 
+    /**
+     * 处理财务前置的交易事件，使用自定义重试配置控制重新投递。
+     */
     @RabbitListener(queues = {TRADE_EVENT_QUEUE_ON_PRE_FINANCE})
     @RabbitHandler
     public void consumeTradeEventPreFinanceQueue(String value, Channel channel, Message message) throws IOException {
@@ -43,12 +47,18 @@ public class RabbitmqConsumerConfiguration extends AbstractRabbitmqConsumerConfi
                 MQQueueEnum.TRADE_EVENT_FOR_PRE_FINANCE);
     }
 
+    /**
+     * 处理支付超时检查，此队列消息仅消费一次，不进行重试。
+     */
     @RabbitListener(queues = {TRADE_PAYMENT_TIMEOUT_EVENT_QUEUE})
     @RabbitHandler
     public void consumePayTimeoutCheckQueue(String value, Channel channel, Message message) throws IOException {
         consume(value, channel, message, MQQueueEnum.TRADE_PAYMENT_TIMEOUT_EVENT_QUEUE);
     }
 
+    /**
+     * 处理支付成功后的交易事件，失败的消息按照动态配置进行重试。
+     */
     @RabbitListener(queues = {TRADE_EVENT_QUEUE_ON_PAY_SUCCESS})
     @RabbitHandler
     public void consumeTradeEvent4PaySuccessQueue(String value, Channel channel, Message message) throws IOException {
