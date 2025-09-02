@@ -7,10 +7,17 @@
 package com.memberclub.starter.config;
 
 /**
- * @author wuyang
+ * 订单中心接入方式枚举，决定订单是在本地处理还是通过外部 SPI 实现处理。
  */
 public enum OrderCenterEnum {
 
-    local,//本地SPI 方式
-    spi,//正式 spi
+    /**
+     * 本地 SPI 实现处理订单。
+     */
+    local,
+
+    /**
+     * 调用生产环境的 SPI 实现。
+     */
+    spi,
 }

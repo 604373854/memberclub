@@ -24,8 +24,10 @@ import javax.annotation.PostConstruct;
 import static org.springframework.util.Assert.notNull;
 
 /**
- * author: 掘金五阳
- * 添加配置项,编译完成后, IDE可以在 yml 文件中推荐该配置项
+ * 校验应用所需的基础设施组件是否已经提供。
+ * 绑定前缀为 {@code memberclub.infrastructure} 的配置。
+ * <p>
+ * 在此处增加新的枚举值，可让 IDE 在 {@code application.yml} 中提示可选项。
  */
 
 @Configuration
@@ -36,72 +38,80 @@ public class InfrastructureImplChecker {
 
 
     /**
-     * 分布式Id 类型, none 为随机生成; 默认类型为 redis
+     * 分布式 ID 生成策略，默认 {@link DistributedIdEnum#redisson}。
      */
     private DistributedIdEnum id;
 
     /**
-     * 分布式锁类型,none 为不加锁,默认是 redis
+     * 分布式锁实现，值为 {@code local} 时表示不加锁。
      */
     private DistributedLockEnum lock;
 
     /**
-     * 配置中心类型,none为取默认值; 默认类型为apollo(携程开源配置中心)
+     * 分布式配置中心，未配置时默认为 Apollo。
      */
     private DistributedConfigEnum config;
 
 
-    /***
-     * 自动重试注解 延迟重试能力依赖的组件
+    /**
+     * 提供延迟重试能力的组件，如 {@code @Retry} 注解依赖此组件。
      */
     private DistributedRetryEnum retry;
 
     /**
-     * 分布式消息队列
+     * 分布式消息队列实现。
      */
     private DistributedMQEnum mq;
 
     /**
-     * 订单中心
+     * 订单中心接入实现。
      */
     private OrderCenterEnum order;
 
     /**
-     * 资产服务
+     * 资产中心接入实现。
      */
     private AssetCenterEnum asset;
 
     /**
-     * 支付相關
+     * 支付能力接入实现。
      */
     private PaymentEnum payment;
 
     /**
-     * 缓存
+     * 分布式缓存后端。
      */
     private DistributedCacheEnum cache;
 
     /**
-     * userTag
+     * 用户标签存储后端。
      */
     private DistributedUserTagEnum usertag;
+
     /**
-     *
+     * SKU 信息加载来源。
      */
     private SkuAccessEnum sku;
 
+    /**
+     * 控制 Feign 客户端行为的嵌套配置。
+     */
     @NestedConfigurationProperty()
     private Feign feign;
 
     /**
-     * 优惠金额计算
+     * 计算优惠金额的策略。
      */
     private AmountComputeEnum amountcompute;
 
+    /**
+     * 属性绑定完成后，校验每个基础设施枚举是否有对应的 Spring Bean 实现。
+     */
     @PostConstruct
     public void init() {
         ApplicationContext applicationContext = ApplicationContextUtils.getContext();
         notNull(applicationContext, "未获取到 ApplicationContext");
+        // 校验基础设施接口是否存在对应的实现类。
         check(() -> applicationContext.getBean(DynamicConfig.class),
                 "DynamicConfig 未获取到实现类,请关注 配置项 memberclub.infrastructure.config,默认 apollo ");
 
@@ -116,6 +126,12 @@ public class InfrastructureImplChecker {
 
     }
 
+    /**
+     * 执行校验，如果缺少 Bean，则抛出带有友好提示信息的异常。
+     *
+     * @param runnable 尝试获取 Bean 的逻辑
+     * @param msg      当未找到 Bean 时抛出的提示信息
+     */
     public void check(Runnable runnable, String msg) {
         try {
             runnable.run();
@@ -124,11 +140,14 @@ public class InfrastructureImplChecker {
         }
     }
 
+    /**
+     * Feign 相关的嵌套配置。
+     */
     @Data
     class Feign {
 
         /**
-         * 是否开启 feign
+         * 是否启用 Feign 客户端。
          */
 
         private Boolean enabled;

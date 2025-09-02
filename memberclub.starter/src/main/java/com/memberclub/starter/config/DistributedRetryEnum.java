@@ -7,13 +7,24 @@
 package com.memberclub.starter.config;
 
 /**
- * @author wuyang
- * 添加枚举后,需要编译一下,IDE 才会在 yml 中推荐对应的值
+ * 自动重试与延迟队列的实现方式枚举。
+ * 不同的取值会影响失败任务的重试策略。
  */
 public enum DistributedRetryEnum {
 
+    /**
+     * 在本地执行重试，不进行分布式协调。
+     */
     local,
+
+    /**
+     * 使用 RabbitMQ 延迟队列处理重试。
+     */
     rabbitmq,
+
+    /**
+     * 使用基于 Redisson 的调度器实现重试。
+     */
     redisson,
     ;
 }
