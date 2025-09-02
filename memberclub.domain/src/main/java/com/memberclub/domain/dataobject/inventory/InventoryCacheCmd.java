@@ -14,7 +14,9 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 
 /**
- * author: 掘金五阳
+ * 批量缓存库存的命令对象
+ *
+ * <p>author: 掘金五阳</p>
  */
 @Builder
 @NoArgsConstructor
@@ -22,5 +24,5 @@ import java.util.List;
 @Data
 public class InventoryCacheCmd {
 
-    List<InventoryCacheDO> caches;
+    List<InventoryCacheDO> caches; // 需要缓存的库存列表
 }

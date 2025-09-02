@@ -9,18 +9,20 @@ package com.memberclub.domain.context.inventory;
 import lombok.Data;
 
 /**
- * author: 掘金五阳
+ * 库存操作响应，封装处理结果
+ *
+ * <p>author: 掘金五阳</p>
  */
 @Data
 public class InventoryOpResponse {
 
-    private boolean success;
+    private boolean success; // 是否成功
 
-    private boolean needRetry;
+    private boolean needRetry; // 是否需要重试
 
-    private int errorCode;
+    private int errorCode; // 错误码
 
-    private String msg;
+    private String msg; // 错误信息
 
-    private Exception e;
+    private Exception e; // 异常对象
 }

@@ -9,14 +9,16 @@ package com.memberclub.domain.context.inventory;
 import lombok.Data;
 
 /**
- * author: 掘金五阳
+ * 单个SKU的库存操作信息
+ *
+ * <p>author: 掘金五阳</p>
  */
 @Data
 public class InventorySkuOpDO {
 
-    private String subKey;
+    private String subKey; // 子键
 
-    private long skuId;
+    private long skuId; // SKU ID
 
-    private long count;
+    private long count; // 操作数量
 }

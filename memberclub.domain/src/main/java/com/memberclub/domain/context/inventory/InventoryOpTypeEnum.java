@@ -7,24 +7,36 @@
 package com.memberclub.domain.context.inventory;
 
 /**
- * @author wuyang
+ * 库存操作类型枚举
+ *
+ * <p>author: wuyang</p>
  */
 public enum InventoryOpTypeEnum {
 
+    /** 扣减库存 */
     DECREMENT(1, "扣减库存"),
 
+    /** 回补库存 */
     ROLLBACK(2, "回补库存");
 
-    private int code;
+    private int code; // 操作码
 
-    private String name;
+    private String name; // 操作名称
 
     InventoryOpTypeEnum(int code, String name) {
         this.code = code;
         this.name = name;
     }
 
+    /**
+     * 根据编码查找操作类型
+     *
+     * @param code 操作码
+     * @return 对应的操作类型
+     * @throws IllegalArgumentException 当编码不存在时抛出
+     */
     public static InventoryOpTypeEnum findByCode(int code) throws IllegalArgumentException {
+        // 遍历所有枚举并匹配编码
         for (InventoryOpTypeEnum item : InventoryOpTypeEnum.values()) {
             if (item.code == code) {
                 return item;
