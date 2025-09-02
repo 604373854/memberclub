@@ -32,7 +32,12 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 /**
- * author: 掘金五阳
+ * 启动时扫描 {@link ExtensionConfig} 的实现类，确保配置的业务线都存在必需的扩展点。
+ * 扫描范围覆盖文件系统和 JAR 包，缺少实现时会抛出异常阻止应用启动。
+ *
+ * <p>可通过配置项 {@code memberclub.extension.bootcheck} 开启或关闭扫描。</p>
+ *
+ * @author 掘金五阳
  */
 @ConditionalOnProperty(name = "memberclub.extension.bootcheck", havingValue = "true")
 @Configuration
@@ -54,57 +59,63 @@ public class ExtensionBootChecker {
     private ExtensionManager extensionManager;
 
 
+    /**
+     * 构造函数中注册文件系统与 JAR 包两种协议的解析器，用于扫描扩展实现类。
+     */
     public ExtensionBootChecker() {
         classSet = new HashSet<>();
         handlerMap = new HashMap<>();
-        //注册一个文件扫描器
+        // 注册扫描本地文件系统的处理器
         FileProtocolHandler fileProtocolHandler = new FileProtocolHandler();
-        //注册一个jar包扫描器
+        // 注册扫描 JAR 包的处理器
         JarProtocolHandler jarProtocolHandler = new JarProtocolHandler();
         handlerMap.put(fileProtocolHandler.handleProtocol(), fileProtocolHandler);
         handlerMap.put(jarProtocolHandler.handleProtocol(), jarProtocolHandler);
     }
 
+    /**
+     * 使用 Spring 的类路径扫描器查找指定包下带有 {@link ExtensionConfig} 注解的类。
+     *
+     * @param basePackage 需要扫描的包名
+     * @return 发现的类列表
+     */
     public static List<Class<?>> scanPackage(String basePackage) {
         ClassPathScanningCandidateComponentProvider provider =
                 new ClassPathScanningCandidateComponentProvider(false);
 
-
-        // 添加一个过滤器来查找带有特定注解的类
+        // 只扫描带有 {@link ExtensionConfig} 注解的类
         provider.addIncludeFilter(new AnnotationTypeFilter(ExtensionConfig.class, false, true));
-
-        // 设置扫描的基础包
-        //provider.setResourceLoader(null);
-        //provider.setResourcePattern("**/*.class");
 
         List<Class<?>> list = Lists.newArrayList();
 
-
-        // 扫描指定的包
+        // 执行包扫描
         provider.findCandidateComponents(basePackage).forEach(beanDefinition -> {
-            // 获取类的全限定名
             String className = beanDefinition.getBeanClassName();
             try {
-                // 使用反射加载类
                 Class<?> clazz = Class.forName(className);
-                // 处理类，例如: 打印类名
                 list.add(clazz);
             } catch (Exception e) {
+                // 类加载失败时记录日志后继续
                 LOG.error("扫描包异常:{} className:{}", basePackage, className, e);
             }
         });
         return list;
     }
 
+    /**
+     * 容器启动后校验必须的扩展点是否存在，若缺少实现则抛出异常，防止应用在配置不完整时启动。
+     */
     @PostConstruct
     public void init() {
         if (!run) {
+            // 确保启动校验只执行一次
             run = true;
         }
         Set<Class<?>> classes = scan("com.memberclub");
         List<String> errorMessages = Lists.newArrayList();
         for (Class<?> clazz : classes) {
             if (!clazz.isInterface()) {
+                // 只校验扩展接口
                 continue;
             }
             ExtensionConfig extensionConfig = clazz.getDeclaredAnnotation(ExtensionConfig.class);
@@ -112,8 +123,8 @@ public class ExtensionBootChecker {
                 continue;
             }
 
-
             if (!extensionConfig.must()) {
+                // 可选扩展接口跳过
                 continue;
             }
             for (BizTypeEnum checkBiz : checkBizs) {
@@ -137,20 +148,28 @@ public class ExtensionBootChecker {
             for (String errorMessage : errorMessages) {
                 LOG.error(errorMessage);
             }
+            // 缺少扩展实现时直接失败
             throw new RuntimeException(String.format("缺少扩展点实现"));
         }
     }
 
+    /**
+     * 使用已注册的 {@link ProtocolHandler} 扫描指定包下的类文件，结果保存在 {@link #classSet} 中。
+     *
+     * @param basePackages 需要扫描的包
+     * @return 扫描到的类集合
+     */
     public Set<Class<?>> scan(String... basePackages) {
         ClassLoader classLoader = this.getClass().getClassLoader();
         for (String basePackage : basePackages) {
-            //将com.aa.bb 替换成 com/aa/bb
+            // 将包名转换成路径以便定位资源
             String resourceName = basePackage.replace('.', '/') + "/";
             Enumeration<URL> resources = null;
             try {
-                //通过classLoader获取所有的resources
+                // 查找所有匹配路径的资源
                 resources = classLoader.getResources(resourceName);
             } catch (IOException e) {
+                // 解析失败时记录日志后继续
                 LOG.error("解析包名", e);
             }
             if (resources == null) {
@@ -159,7 +178,7 @@ public class ExtensionBootChecker {
             while (resources.hasMoreElements()) {
                 URL url = resources.nextElement();
                 String protocol = url.getProtocol();
-                //根据url中protocol类型查找适用的解析器
+                // 根据协议选择相应的处理器
                 ProtocolHandler protocolHandler = handlerMap.get(protocol);
                 if (protocolHandler == null) {
                     throw new RuntimeException("need support protocol [" + protocol + "]");
