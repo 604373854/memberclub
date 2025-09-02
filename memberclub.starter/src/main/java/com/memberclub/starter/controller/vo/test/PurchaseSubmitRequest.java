@@ -9,7 +9,7 @@ package com.memberclub.starter.controller.vo.test;
 import lombok.Data;
 
 /**
- * author: 掘金五阳
+ * 管理端用于提交测试购买的请求对象。
  */
 @Data
 public class PurchaseSubmitRequest {

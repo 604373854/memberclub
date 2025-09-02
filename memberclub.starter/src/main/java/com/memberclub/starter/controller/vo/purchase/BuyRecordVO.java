@@ -5,6 +5,9 @@ import lombok.Data;
 
 import java.util.List;
 
+/**
+ * 展示用户购买记录及其子订单的视图对象。
+ */
 @Data
 public class BuyRecordVO {
 

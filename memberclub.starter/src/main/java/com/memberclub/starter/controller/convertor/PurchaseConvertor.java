@@ -23,13 +23,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * author: 掘金五阳
+ * 购买流程中使用的转换工具，负责在控制层视图对象与领域命令或结果之间转换。
  */
 public class PurchaseConvertor {
 
+    /**
+     * 将控制层的 {@link PurchaseSubmitVO} 转换为领域服务可识别的
+     * {@link PurchaseSubmitCmd}。
+     *
+     * @param param 提交视图对象
+     * @return 包含用户和 SKU 信息的命令对象
+     */
     public static PurchaseSubmitCmd toSubmitCmd(PurchaseSubmitVO param) {
         PurchaseSubmitCmd cmd = new PurchaseSubmitCmd();
         cmd.setUserInfo(param.getUserInfo());
+        // 从安全上下文中获取用户 ID
         cmd.setUserId(SecurityUtil.getUserId());
         cmd.setBizType(BizTypeEnum.findByCode(param.getBizId()));
         cmd.setClientInfo(param.getClientInfo());
@@ -40,15 +48,26 @@ public class PurchaseConvertor {
         return cmd;
     }
 
+    /**
+     * 将订单预览列表转换为视图对象。
+     *
+     * @param previewDOList 订单预览领域对象列表
+     * @return 视图对象列表
+     */
     public static List<BuyRecordVO> toBuyRecordVOS(List<MemberOrderAftersalePreviewDO> previewDOList) {
         return CollectionUtilEx.mapToList(previewDOList, o -> toBuyRecordVOS(o));
     }
 
+    /**
+     * 将单个订单预览转换为视图对象。
+     *
+     * @param order 订单预览领域对象
+     * @return 购买记录视图对象
+     */
     public static BuyRecordVO toBuyRecordVOS(MemberOrderAftersalePreviewDO order) {
         BuyRecordVO record = new BuyRecordVO();
         record.setTradeId(order.getMemberOrderDO().getTradeId());
         record.setBizType(order.getMemberOrderDO().getBizType().getCode());
-        //record.setPreviewResponse(order.getPreviewResponse());
         record.setStatus(order.getMemberOrderDO().getStatus().toString());
         List<BuySubOrderVO> subOrderVOS = new ArrayList<>();
         for (MemberSubOrderDO subOrder : order.getMemberOrderDO().getSubOrders()) {
