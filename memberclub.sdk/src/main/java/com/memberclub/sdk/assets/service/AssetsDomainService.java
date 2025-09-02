@@ -21,6 +21,8 @@ import java.util.Map;
 
 /**
  * author: 掘金五阳
+ *
+ * 负责与下游交互查询会员资产信息。
  */
 @Service
 public class AssetsDomainService {
@@ -31,6 +33,14 @@ public class AssetsDomainService {
     @Autowired
     private ExtensionManager extensionManager;
 
+    /**
+     * 根据用户信息和权益类型查询其资产详情。
+     *
+     * @param userId     用户标识
+     * @param rightType  权益类型
+     * @param itemTokens 资产标识集合
+     * @return itemToken -> 资产列表映射
+     */
     public Map<String, List<AssetDO>> queryAssets(Long userId, Integer rightType, List<String> itemTokens) {
         // TODO: 2025/1/25 暂时先假设下游均实现了 SPI
         AssetFetchRequestDO request = new AssetFetchRequestDO();
