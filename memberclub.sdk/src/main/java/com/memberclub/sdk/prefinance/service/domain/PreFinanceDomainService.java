@@ -33,6 +33,8 @@ import java.util.List;
 
 /**
  * author: 掘金五阳
+ *
+ * 处理预结算相关的资产构建、消息发送等领域逻辑。
  */
 @Service
 public class PreFinanceDomainService {
@@ -49,6 +51,11 @@ public class PreFinanceDomainService {
     @Autowired
     private OnceTaskDao onceTaskDao;
 
+    /**
+     * 按照业务场景构建预结算资产数据。
+     *
+     * @param preFinanceContext 预结算上下文
+     */
     public void buildAssets(PreFinanceContext preFinanceContext) {
         PreFinanceBuildAssetsExtension extension =
                 extensionManager.getExtension(BizScene.of(preFinanceContext.getBizType()), PreFinanceBuildAssetsExtension.class);
@@ -67,6 +74,12 @@ public class PreFinanceDomainService {
         }
     }
 
+    /**
+     * 根据上下文构建预结算事件消息。
+     *
+     * @param context 预结算上下文
+     * @return 序列化后的消息内容
+     */
     public String buildMessage(PreFinanceContext context) {
         PreFinanceEvent event = new PreFinanceEvent();
         context.setPreFinanceEvent(event);
@@ -101,12 +114,26 @@ public class PreFinanceDomainService {
                 PreFinanceMessageBuildExtension.class).buildMessage(context, event);
     }
 
+    /**
+     * 将预结算事件发布到消息队列。
+     *
+     * @param context 预结算上下文
+     * @param message 消息内容
+     */
     public void publish(PreFinanceContext context, String message) {
         messageQuenePublishFacade.publish(MQTopicEnum.PRE_FINANCE_EVENT, message);
         CommonLog.warn("发布预结算事件 {} topic:{}, message:{}", context.getPreFinanceEventEnum().getName(),
                 MQTopicEnum.PRE_FINANCE_EVENT.getName(), message);
     }
 
+    /**
+     * 构造预结算事件中的基础明细信息。
+     *
+     * @param context 预结算上下文
+     * @param item    履约项
+     * @param assets  关联的资产列表
+     * @return 预结算事件明细
+     */
     public PreFinanceEventDetail buildBasicFinanceEventDetail(PreFinanceContext context, MemberPerformItemDO item, List<AssetDO> assets) {
         PreFinanceEventDetail detail = new PreFinanceEventDetail();
         detail.setStime(item.getStime());
@@ -130,6 +157,12 @@ public class PreFinanceDomainService {
         return detail;
     }
 
+    /**
+     * 将资产列表转换为金融资产并写入明细。
+     *
+     * @param assets 资产列表
+     * @param detail 预结算事件明细
+     */
     private void buildFinanceAssets(List<AssetDO> assets, PreFinanceEventDetail detail) {
         List<FinanceAssetDO> financeAssets = CollectionUtilEx.map(assets, (asset) -> {
             FinanceAssetDO financeAssetDO = new FinanceAssetDO();
@@ -139,6 +172,11 @@ public class PreFinanceDomainService {
         detail.setAssets(financeAssets);
     }
 
+    /**
+     * 创建资产过期任务。
+     *
+     * @param context 预结算上下文
+     */
     public void onCreateExpireTask(PreFinanceContext context) {
         List<OnceTaskDO> taskDOList = Lists.newArrayList();
         for (MemberPerformItemDO performItem : context.getPerformItems()) {

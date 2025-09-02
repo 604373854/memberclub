@@ -23,6 +23,8 @@ import java.util.List;
 
 /**
  * author: 掘金五阳
+ *
+ * 提供对新会员标签的增删查等核心能力。
  */
 @Service
 public class NewMemberDomainService {
@@ -33,6 +35,11 @@ public class NewMemberDomainService {
     @Autowired
     private UserTagService userTagService;
 
+    /**
+     * 为指定上下文中的用户打上新会员标签。
+     *
+     * @param context 新会员标记上下文
+     */
     public void mark(NewMemberMarkContext context) {
         UserTagOpCmd cmd = new UserTagOpCmd();
         cmd.buildUniqueKey(UserTagTypeEnum.newmember, context.getBizType(), context.getUniqueKey());
@@ -62,6 +69,11 @@ public class NewMemberDomainService {
         }
     }
 
+    /**
+     * 取消指定上下文中的新会员标签。
+     *
+     * @param context 新会员标记上下文
+     */
     public void unmark(NewMemberMarkContext context) {
         UserTagOpCmd cmd = new UserTagOpCmd();
         cmd.buildUniqueKey(UserTagTypeEnum.newmember, context.getBizType(), context.getUniqueKey());
@@ -91,6 +103,11 @@ public class NewMemberDomainService {
     }
 
 
+    /**
+     * 校验用户是否为新会员，并在上下文中写入结果。
+     *
+     * @param context 新会员标记上下文
+     */
     public void validate(NewMemberMarkContext context) {
         UserTagOpCmd cmd = new UserTagOpCmd();
         cmd.setOpType(UserTagOpTypeEnum.GET);
