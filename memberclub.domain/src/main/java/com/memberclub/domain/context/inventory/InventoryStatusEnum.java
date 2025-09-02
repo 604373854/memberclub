@@ -7,25 +7,37 @@
 package com.memberclub.domain.context.inventory;
 
 /**
- * @author wuyang
+ * 库存状态枚举
+ *
+ * <p>author: wuyang</p>
  */
 public enum InventoryStatusEnum {
 
 
+    /** 上架中 */
     ACTIVTE(0, "上架中"),
+    /** 已下架 */
     INACTIVE(999, "已下架"),
     ;
 
-    private int code;
+    private int code; // 状态码
 
-    private String name;
+    private String name; // 状态名称
 
     InventoryStatusEnum(int code, String name) {
         this.code = code;
         this.name = name;
     }
 
+    /**
+     * 根据编码查找库存状态
+     *
+     * @param code 状态码
+     * @return 对应的状态
+     * @throws IllegalArgumentException 当编码无效时抛出
+     */
     public static InventoryStatusEnum findByCode(int code) throws IllegalArgumentException {
+        // 遍历所有枚举并匹配编码
         for (InventoryStatusEnum item : InventoryStatusEnum.values()) {
             if (item.code == code) {
                 return item;
