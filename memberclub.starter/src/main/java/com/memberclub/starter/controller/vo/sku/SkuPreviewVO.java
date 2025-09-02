@@ -2,6 +2,9 @@ package com.memberclub.starter.controller.vo.sku;
 
 import lombok.Data;
 
+/**
+ * 用于向客户端展示 SKU 预览信息的视图对象。
+ */
 @Data
 public class SkuPreviewVO {
 

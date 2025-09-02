@@ -9,10 +9,10 @@ package com.memberclub.starter.controller.vo;
 import lombok.Data;
 
 /**
- * author: 掘金五阳
+ * 管理端用于模拟指定交易支付回调的请求对象。
  */
 @Data
 public class TestPayRequest {
-    
+
     private String tradeId;
 }

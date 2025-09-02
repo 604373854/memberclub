@@ -2,6 +2,9 @@ package com.memberclub.starter.controller.vo.aftersale;
 
 import lombok.Data;
 
+/**
+ * 提交售后申请的请求体。
+ */
 @Data
 public class AftersaleSubmitVO {
 
