@@ -7,10 +7,16 @@
 package com.memberclub.starter.config;
 
 /**
- * @author wuyang
- * 添加枚举后,需要编译一下,IDE 才会在 yml 中推荐对应的值
+ * 配置中心实现枚举。
+ * 添加新的枚举值可让 Spring 提示可用的配置中心实现。
  */
 public enum DistributedConfigEnum {
+    /**
+     * 使用本地配置文件，不依赖外部配置中心。
+     */
     local,
+    /**
+     * 使用 Apollo 作为配置中心。
+     */
     apollo,
 }

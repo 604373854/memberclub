@@ -33,7 +33,7 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 import static com.fasterxml.jackson.databind.SerializationFeature.FAIL_ON_EMPTY_BEANS;
 
 /**
- * author: 掘金五阳
+ * 当应用配置为使用 Redis 作为缓存或用户标签存储时，提供 Redis 与 Redisson 的 Bean 定义。
  */
 @Configuration
 @ConditionalOnProperty(name = "memberclub.infrastructure.cache", havingValue = "redis")
@@ -44,7 +44,7 @@ public class RedisConfiguration {
     @Bean
     public RedissonClient redisson() {
         Config config = new Config();
-        //此处调用的方法为单节点的redis
+        // 配置单节点 Redis 服务地址；集群环境需调整。
         config.useSingleServer().setAddress("redis://localhost:6379");
         config.setCodec(new CompositeCodec(new StringCodec(), new JsonJacksonCodec()));
         return Redisson.create(config);
@@ -52,26 +52,26 @@ public class RedisConfiguration {
 
 
     /**
-     * retemplate相关配置
+     * 配置使用 JSON 序列化的 {@link RedisTemplate}。
      *
-     * @param factory
-     * @return
+     * @param factory 连接工厂
+     * @return 配置完成的模板实例
      */
     @Bean
     @ConditionalOnProperty(name = "memberclub.infrastructure.usertag", havingValue = "redis")
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory factory) {
 
         RedisTemplate<String, Object> template = new RedisTemplate<>();
-        // 配置连接工厂
+        // 配置连接工厂及值序列化器。
         template.setConnectionFactory(factory);
 
-        //使用Jackson2JsonRedisSerializer来序列化和反序列化redis的value值（默认使用JDK的序列化方式）
+        // 使用 Jackson2JsonRedisSerializer 替代 JDK 序列化。
         Jackson2JsonRedisSerializer jacksonSeial = new Jackson2JsonRedisSerializer(Object.class);
 
         ObjectMapper om = new ObjectMapper();
-        // 指定要序列化的域，field,get和set,以及修饰符范围，ANY是都有包括private和public
+        // 设置所有字段可见以便序列化。
         om.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
-        // 指定序列化输入的类型，类必须是非final修饰的，final修饰的类，比如String,Integer等会跑出异常
+        // 允许非 final 类被序列化；如 String 这种 final 类使用自身的编码。
         om.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
         om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         om.configure(FAIL_ON_EMPTY_BEANS, false);
@@ -80,12 +80,11 @@ public class RedisConfiguration {
         om.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         jacksonSeial.setObjectMapper(om);
 
-        // 值采用json序列化
+        // key 使用字符串序列化，value 使用 JSON 序列化。
         template.setValueSerializer(jacksonSeial);
-        //使用StringRedisSerializer来序列化和反序列化redis的key值
         template.setKeySerializer(new StringRedisSerializer());
 
-        // 设置hash key 和value序列化模式
+        // Hash 的 key 与 value 也遵循同样的序列化规则。
         template.setHashKeySerializer(new StringRedisSerializer());
         template.setHashValueSerializer(jacksonSeial);
         template.afterPropertiesSet();
@@ -94,10 +93,10 @@ public class RedisConfiguration {
     }
 
     /**
-     * 对hash类型的数据操作
+     * 暴露 Redis Hash 结构的操作。
      *
-     * @param redisTemplate
-     * @return
+     * @param redisTemplate 配置好的模板
+     * @return Hash 操作对象
      */
     @Bean
     @ConditionalOnProperty(name = "memberclub.infrastructure.usertag", havingValue = "redis")
@@ -106,10 +105,10 @@ public class RedisConfiguration {
     }
 
     /**
-     * 对redis字符串类型数据操作
+     * 暴露 Redis String 类型的操作。
      *
-     * @param redisTemplate
-     * @return
+     * @param redisTemplate 配置好的模板
+     * @return Value 操作对象
      */
     @Bean
     @ConditionalOnProperty(name = "memberclub.infrastructure.usertag", havingValue = "redis")
@@ -118,10 +117,10 @@ public class RedisConfiguration {
     }
 
     /**
-     * 对链表类型的数据操作
+     * 暴露 Redis List 结构的操作。
      *
-     * @param redisTemplate
-     * @return
+     * @param redisTemplate 配置好的模板
+     * @return List 操作对象
      */
     @Bean
     @ConditionalOnProperty(name = "memberclub.infrastructure.usertag", havingValue = "redis")
@@ -130,10 +129,10 @@ public class RedisConfiguration {
     }
 
     /**
-     * 对无序集合类型的数据操作
+     * 暴露 Redis Set 结构的操作。
      *
-     * @param redisTemplate
-     * @return
+     * @param redisTemplate 配置好的模板
+     * @return Set 操作对象
      */
     @Bean
     @ConditionalOnProperty(name = "memberclub.infrastructure.usertag", havingValue = "redis")
@@ -142,10 +141,10 @@ public class RedisConfiguration {
     }
 
     /**
-     * 对有序集合类型的数据操作
+     * 暴露 Redis Sorted Set 结构的操作。
      *
-     * @param redisTemplate
-     * @return
+     * @param redisTemplate 配置好的模板
+     * @return ZSet 操作对象
      */
     @Bean
     @ConditionalOnProperty(name = "memberclub.infrastructure.usertag", havingValue = "redis")
